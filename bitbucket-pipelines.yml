@@ -1,0 +1,61 @@
+image: node:18
+
+definitions:
+  steps:
+    - step: &CodeQualityCheck
+        name: Code Quality Check
+        caches:
+          - node
+        script:
+          - npm install
+          - npx eslint . --fix
+          - npx prettier --check .
+
+    - step: &UnitTests
+        name: Unit Tests
+        caches:
+          - node
+        script:
+          - npm install
+          - npm test
+
+    - step: &DockerBuildAndPush
+        name: Docker Build and Push
+        script:
+          - docker build -t my-app:${BITBUCKET_COMMIT} .
+          - echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+          - docker tag my-app:${BITBUCKET_COMMIT} my-docker-repo/my-app:${BITBUCKET_COMMIT}
+          - docker push my-docker-repo/my-app:${BITBUCKET_COMMIT}
+
+    - step: &DeployToKubernetes
+        name: Deploy to Kubernetes
+        script:
+          - sed -i "s|my-app:${BITBUCKET_COMMIT}|$DOCKER_USERNAME/my-app:$BITBUCKET_COMMIT|g" deployment.yml
+          - pipe: atlassian/kubectl-run:1.1.2
+            variables:
+              KUBE_CONFIG: $KUBE_CONFIG
+              KUBECTL_COMMAND: 'apply'
+              RESOURCE_PATH: 'deployment.yml'
+
+
+pipelines:
+  branches:
+    master:
+      - step:
+          <<: *CodeQualityCheck
+      - step:
+          <<: *UnitTests
+      - step:
+          <<: *DockerBuildAndPush
+      - step:
+          <<: *DeployToKubernetes
+
+    dev:
+      - step:
+          <<: *CodeQualityCheck
+      - step:
+          <<: *UnitTests
+      - step:
+          <<: *DockerBuildAndPush
+      - step:
+          <<: *DeployToKubernetes
