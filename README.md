@@ -38,13 +38,14 @@ The microservice includes:
 
 1. Clone the Repository
 
-git clone https://github.com/TrimMuharremi/microservice.git
-cd microservice
+    git clone https://github.com/trimmuharremi98/technical-assignment-ab-inbev.git
+    cd microservice
 
 2. Build and Push Docker Image
 
-docker build -t my-docker-repo/my-app:latest .
-docker push my-docker-repo/my-app:latest
+    docker build -t my-docker-repo/my-app:latest .
+
+    docker push my-docker-repo/my-app:latest
 
 3. Apply Kubernetes Configurations
 
@@ -55,8 +56,6 @@ docker push my-docker-repo/my-app:latest
     Deploy the application and Nginx and Configure Horizontal Pod Autoscaling:
 
         kubectl apply -f deployment.yml
-
-Access the application via the load balancer’s external IP.
 
 
 # Key Technical Decisions
